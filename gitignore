@@ -1,0 +1,21 @@
+# Ignore macOS and Linux junk
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Ignore compiled binaries or editor backups
+*.bak
+*.tmp
+
+# Ignore logs or output
+*.log
+*.out
+
+# Ignore system-generated files
+__pycache__/
+*.pyc
+
+# Optional build/test/output folders
+dist/
+build/
