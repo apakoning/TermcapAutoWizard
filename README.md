@@ -1,8 +1,8 @@
-# less_termcap_fzf_wizard.sh
+# Termcap Auto Wizard
 
 ### 🧾 Script Description
 
-A guided terminal-based color picker for customizing `man` page styles using the `LESS_TERMCAP_*` environment variables.
+**`termcap_auto_wizard.sh`** is a guided terminal-based color picker for customizing `man` page styles using the `LESS_TERMCAP_*` environment variables.
 
 ---
 
@@ -39,8 +39,8 @@ A guided terminal-based color picker for customizing `man` page styles using the
 ## ▶️ How to Use
 
 ```bash
-chmod +x less_termcap_fzf_wizard.sh
-./less_termcap_fzf_wizard.sh
+chmod +x termcap_auto_wizard.sh
+./termcap_auto_wizard.sh
 ```
 
 You’ll be guided step-by-step to choose colors and get your theme configuration.
@@ -52,14 +52,10 @@ You’ll be guided step-by-step to choose colors and get your theme configuratio
 You can also run:
 
 ```bash
-./less_termcap_fzf_wizard.sh --help
+./termcap_auto_wizard.sh --help
 ```
 
 To display built-in instructions.
-
----
-
-Created with readability and terminal mastery in mind. 😎
 
 ---
 
@@ -84,3 +80,7 @@ Most modern editors (VS Code, Sublime, JetBrains, Vim w/ plugin) respect this au
   - Markdown files
   - Text and binary files
 - Helps prevent issues when collaborating across macOS, Windows, and Linux
+
+---
+
+Created with readability and terminal mastery in mind. 😎
