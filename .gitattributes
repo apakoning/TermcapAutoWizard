@@ -1,0 +1,19 @@
+# Ensure Unix (LF) line endings for all text files
+* text=auto eol=lf
+
+# Shell scripts
+*.sh text diff eol=lf
+
+# Markdown and text files
+*.md text diff eol=lf
+*.txt text diff eol=lf
+
+# License file
+LICENSE text eol=lf
+
+# Binary files (just in case)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
