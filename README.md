@@ -6,7 +6,7 @@
 
 ---
 
-## 📌 What It Does
+## What It Does
 
 - Detects your terminal’s color capability (8-color, 16-color, 256-color, 24-bit RGB)
 - Lets you interactively select colors for:
@@ -19,7 +19,7 @@
 
 ---
 
-## 📌 Use Cases
+## Use Cases
 
 - Improve readability of `man` pages
 - Match color scheme to your terminal
@@ -27,7 +27,7 @@
 
 ---
 
-## ⚙️ Requirements
+## Requirements
 
 - Bash
 - [`fzf`](https://github.com/junegunn/fzf) (Install with `sudo dnf install fzf`)
@@ -36,7 +36,7 @@
 
 ---
 
-## ▶️ How to Use
+## How to Use
 
 ```bash
 chmod +x termcap_auto_wizard.sh
@@ -47,7 +47,7 @@ You’ll be guided step-by-step to choose colors and get your theme configuratio
 
 ---
 
-## 🆘 Help
+## Help
 
 You can also run:
 
@@ -63,7 +63,7 @@ To display built-in instructions.
 
 This repo includes tools to ensure **consistent behavior across platforms** and editors:
 
-### ✅ `.editorconfig`
+### `.editorconfig`
 - Enforces:
   - UTF-8 encoding
   - Unix-style line endings (`LF`)
@@ -73,7 +73,7 @@ This repo includes tools to ensure **consistent behavior across platforms** and 
 
 Most modern editors (VS Code, Sublime, JetBrains, Vim w/ plugin) respect this automatically.
 
-### ✅ `.gitattributes`
+### `.gitattributes`
 - Standardizes line endings across systems
 - Ensures proper Git diff behavior for:
   - Shell scripts
@@ -83,4 +83,4 @@ Most modern editors (VS Code, Sublime, JetBrains, Vim w/ plugin) respect this au
 
 ---
 
-Created with readability and terminal mastery in mind. 😎
+Created with readability and terminal mastery in mind. 
