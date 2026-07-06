@@ -1,203 +1,137 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# ============================
-# LESS_TERMCAP Color Wizard
-# ============================
+# Termcap Auto Wizard
+# Interactive LESS_TERMCAP color picker for readable man pages.
+
+set -u
+
+VERSION="0.1.0"
 
 show_help() {
-cat << 'EOF'
+  cat <<'EOF_HELP'
+Termcap Auto Wizard
 
-🧾 Script: less_termcap_fzf_wizard.sh
-──────────────────────────────────────
-📌 Description:
-This script configures colorful and readable `man` pages by allowing you to interactively pick colors for LESS_TERMCAP_* variables.
+Usage:
+  ./termcap_auto_wizard.sh [option]
 
-📌 What it does:
-- Detects terminal color capability (8-color, 16-color, 256-color, 24-bit RGB)
-- Guides you through selecting colors for bold, underline, blinking, standout
-- Outputs copy-paste ready export lines for your ~/.bashrc
-- Includes optimized default themes for all terminal types
+Options:
+  -h, --help       Show this help message
+  -v, --version    Show version information
+  --preset         Print recommended presets and exit
 
-📌 What it's used for:
-- Making man pages easier to read
-- Matching man page colors to your terminal theme
-- Learning and applying terminal color theory (ANSI, RGB)
+Description:
+  Termcap Auto Wizard helps you build LESS_TERMCAP_* environment variables
+  for colorful, readable man pages. It detects terminal color capability and,
+  when fzf is installed, lets you interactively select RGB colors.
 
-📌 Requirements:
-- Bash
-- fzf (install via `sudo dnf install fzf`)
-- A terminal emulator (GNOME Terminal, TTY, SSH, etc.)
-- tput (already available via ncurses on most systems)
+Requirements:
+  - Bash 4+
+  - fzf, for interactive color picking
+  - tput, normally provided by ncurses
 
-📌 How to use:
-1. Make executable:
-   chmod +x less_termcap_fzf_wizard.sh
+Use:
+  chmod +x termcap_auto_wizard.sh
+  ./termcap_auto_wizard.sh
 
-2. Run it:
-   ./less_termcap_fzf_wizard.sh
-
-3. Follow the wizard and copy the result to your ~/.bashrc
-
-EOF
+After the wizard prints the export block, paste it into ~/.bashrc and run:
+  source ~/.bashrc
+EOF_HELP
 }
 
-# Check if help was requested
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-  show_help
-  exit 0
-fi
+show_version() {
+  echo "Termcap Auto Wizard $VERSION"
+}
 
-#!/bin/bash
+need_command() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Error: required command not found: $cmd" >&2
+    return 1
+  fi
+}
 
-# Dependencies check
-command -v fzf >/dev/null 2>&1 || { echo >&2 "fzf is not installed. Please install it first."; exit 1; }
+detect_color_mode() {
+  if [[ "${COLORTERM:-}" == *"truecolor"* || "${COLORTERM:-}" == *"24bit"* ]]; then
+    echo "truecolor"
+  elif tput colors >/dev/null 2>&1 && [[ "$(tput colors)" -ge 256 ]]; then
+    echo "256color"
+  elif tput colors >/dev/null 2>&1 && [[ "$(tput colors)" -ge 16 ]]; then
+    echo "16color"
+  elif tput colors >/dev/null 2>&1 && [[ "$(tput colors)" -ge 8 ]]; then
+    echo "8color"
+  else
+    echo "unknown"
+  fi
+}
+
+print_detection() {
+  local mode="$1"
+
+  echo "=============================="
+  echo "Detecting terminal capabilities"
+  echo "=============================="
+  echo "Detected: $mode"
+
+  case "$mode" in
+    truecolor) echo "Recommended: 24-bit true color theme" ;;
+    256color)  echo "Recommended: 256-color theme" ;;
+    16color)   echo "Recommended: 16-color ANSI theme" ;;
+    8color)    echo "Recommended: 8-color fallback theme" ;;
+    *)         echo "Could not determine color depth. Use the 8-color fallback theme." ;;
+  esac
+}
 
 generate_rgb_list() {
+  local r g b
   for r in 0 64 128 192 255; do
     for g in 0 64 128 192 255; do
       for b in 0 64 128 192 255; do
         printf "%03d,%03d,%03d\t\e[48;2;%d;%d;%dm   \e[0m\n" "$r" "$g" "$b" "$r" "$g" "$b"
-echo
-echo "=============================="
-echo "🧠 Detecting Terminal Capabilities..."
-echo "=============================="
-
-TERM_COLOR_MODE="unknown"
-
-if [[ "$COLORTERM" == *"truecolor"* || "$COLORTERM" == *"24bit"* ]]; then
-  TERM_COLOR_MODE="truecolor"
-elif tput colors &>/dev/null && [ "$(tput colors)" -ge 256 ]; then
-  TERM_COLOR_MODE="256color"
-elif tput colors &>/dev/null && [ "$(tput colors)" -ge 16 ]; then
-  TERM_COLOR_MODE="16color"
-elif tput colors &>/dev/null && [ "$(tput colors)" -ge 8 ]; then
-  TERM_COLOR_MODE="8color"
-else
-  TERM_COLOR_MODE="unknown"
-fi
-
-echo "Detected: $TERM_COLOR_MODE"
-
-case "$TERM_COLOR_MODE" in
-  truecolor)
-    echo "✅ Recommended: 24-bit True Color Theme"
-    ;;
-  256color)
-    echo "✅ Recommended: 256-Color Theme"
-    ;;
-  16color)
-    echo "✅ Recommended: 16-Color ANSI Theme"
-    ;;
-  8color)
-    echo "✅ Recommended: 8-Color Fallback Theme"
-    ;;
-  *)
-    echo "⚠️ Could not determine your terminal's color depth. Use the 8-color fallback theme to be safe."
-    ;;
-esac
-
       done
     done
   done
 }
 
 pick_color() {
-  local label=$1
-  echo
-  echo "=== Select color for $label ==="
-  local rgb=$(generate_rgb_list | fzf --ansi --prompt="$label: " | cut -f1)
+  local label="$1"
+  local rgb
+
+  echo >&2
+  echo "=== Select color for $label ===" >&2
+
+  rgb="$(generate_rgb_list | fzf --ansi --prompt="$label: " | cut -f1)"
+
   if [[ -z "$rgb" ]]; then
-    echo "No selection made. Exiting."
+    echo "No selection made. Exiting." >&2
     exit 1
   fi
+
   echo "$rgb"
 }
 
-echo "=============================="
-echo "LESS TERMCAP RGB Color Picker Wizard"
-echo "=============================="
-echo "You'll be prompted to select colors for various man page text styles."
-echo "Press Enter to start."
-read
+print_presets() {
+  cat <<'EOF_PRESETS'
+Suggested readable LESS_TERMCAP themes
 
-declare -A colors
-
-colors[mb]=$(pick_color "LESS_TERMCAP_mb (blinking)")
-colors[md]=$(pick_color "LESS_TERMCAP_md (bold)")
-colors[us]=$(pick_color "LESS_TERMCAP_us (underline)")
-colors[so_fg]=$(pick_color "LESS_TERMCAP_so foreground (standout text)")
-colors[so_bg]=$(pick_color "LESS_TERMCAP_so background (standout background)")
-
-# Static resets
-colors[me]="\e[0m"
-colors[se]="\e[0m"
-colors[ue]="\e[0m"
-
-echo
-echo "=============================="
-echo "Your Custom LESS_TERMCAP Theme:"
-echo "=============================="
-echo
-
-echo "export LESS_TERMCAP_mb=\$'\e[1;38;2;${colors[mb]}m'"
-echo "export LESS_TERMCAP_md=\$'\e[1;38;2;${colors[md]}m'"
-echo "export LESS_TERMCAP_us=\$'\e[1;38;2;${colors[us]}m'"
-echo "export LESS_TERMCAP_me=\$'${colors[me]}'"
-echo "export LESS_TERMCAP_se=\$'${colors[se]}'"
-echo "export LESS_TERMCAP_ue=\$'${colors[ue]}'"
-echo "export LESS_TERMCAP_so=\$'\e[1;48;2;${colors[so_bg]};38;2;${colors[so_fg]}m'"
-
-echo
-echo "Paste the above lines into your ~/.bashrc and run 'source ~/.bashrc' to apply."
-echo
-read -p "Press enter to exit."
-
-echo
-echo "=============================="
-echo "Suggested Readable 24-bit RGB Theme:"
-echo "=============================="
-cat << 'EOF'
-export LESS_TERMCAP_mb=$'\e[1;38;2;255;64;64m'            # blinking = bright red
-export LESS_TERMCAP_md=$'\e[1;38;2;102;255;255m'          # bold = light cyan
-export LESS_TERMCAP_us=$'\e[1;38;2;128;255;128m'          # underline = light green
-export LESS_TERMCAP_so=$'\e[1;48;2;0;0;128;38;2;255;255;0m'  # standout = yellow on navy blue
-export LESS_TERMCAP_me=$'\e[0m'                           # reset
-export LESS_TERMCAP_se=$'\e[0m'                           # reset standout
-export LESS_TERMCAP_ue=$'\e[0m'                           # reset underline
-EOF
-
-echo
-echo "=============================="
-echo "Suggested Readable LESS_TERMCAP Themes"
-echo "=============================="
-
-echo
-echo "🎨 24-bit True Color (16.7 million colors):"
-cat << 'EOF'
-export LESS_TERMCAP_mb=$'\e[1;38;2;255;64;64m'            # blinking = bright red
-export LESS_TERMCAP_md=$'\e[1;38;2;102;255;255m'          # bold = light cyan
-export LESS_TERMCAP_us=$'\e[1;38;2;128;255;128m'          # underline = light green
-export LESS_TERMCAP_so=$'\e[1;48;2;0;0;128;38;2;255;255;0m'  # standout = yellow on navy blue
+24-bit true color:
+export LESS_TERMCAP_mb=$'\e[1;38;2;255;64;64m'                 # blinking = bright red
+export LESS_TERMCAP_md=$'\e[1;38;2;102;255;255m'               # bold = light cyan
+export LESS_TERMCAP_us=$'\e[1;38;2;128;255;128m'               # underline = light green
+export LESS_TERMCAP_so=$'\e[1;48;2;0;0;128;38;2;255;255;0m'    # standout = yellow on navy
 export LESS_TERMCAP_me=$'\e[0m'
 export LESS_TERMCAP_se=$'\e[0m'
 export LESS_TERMCAP_ue=$'\e[0m'
-EOF
 
-echo
-echo "🌈 256-color Terminal:"
-cat << 'EOF'
-export LESS_TERMCAP_mb=$'\e[1;38;5;196m'       # blinking = bright red
-export LESS_TERMCAP_md=$'\e[1;38;5;81m'        # bold = light cyan
-export LESS_TERMCAP_us=$'\e[1;38;5;112m'       # underline = light green
-export LESS_TERMCAP_so=$'\e[1;48;5;18;38;5;226m'  # standout = yellow on navy
+256-color terminal:
+export LESS_TERMCAP_mb=$'\e[1;38;5;196m'          # blinking = bright red
+export LESS_TERMCAP_md=$'\e[1;38;5;81m'           # bold = light cyan
+export LESS_TERMCAP_us=$'\e[1;38;5;112m'          # underline = light green
+export LESS_TERMCAP_so=$'\e[1;48;5;18;38;5;226m' # standout = yellow on navy
 export LESS_TERMCAP_me=$'\e[0m'
 export LESS_TERMCAP_se=$'\e[0m'
 export LESS_TERMCAP_ue=$'\e[0m'
-EOF
 
-echo
-echo "🖥️ 16-color Terminal:"
-cat << 'EOF'
+16-color terminal:
 export LESS_TERMCAP_mb=$'\e[1;31m'    # blinking = red
 export LESS_TERMCAP_md=$'\e[1;36m'    # bold = cyan
 export LESS_TERMCAP_us=$'\e[1;32m'    # underline = green
@@ -205,16 +139,73 @@ export LESS_TERMCAP_so=$'\e[1;44;33m' # standout = yellow on blue
 export LESS_TERMCAP_me=$'\e[0m'
 export LESS_TERMCAP_se=$'\e[0m'
 export LESS_TERMCAP_ue=$'\e[0m'
-EOF
 
-echo
-echo "📟 8-color Terminal (fallback safe):"
-cat << 'EOF'
+8-color fallback:
 export LESS_TERMCAP_mb=$'\e[1;31m'    # red
-export LESS_TERMCAP_md=$'\e[1;37m'    # white (safe fallback)
+export LESS_TERMCAP_md=$'\e[1;37m'    # white
 export LESS_TERMCAP_us=$'\e[1;32m'    # green
 export LESS_TERMCAP_so=$'\e[7m'       # reverse video
 export LESS_TERMCAP_me=$'\e[0m'
 export LESS_TERMCAP_se=$'\e[0m'
 export LESS_TERMCAP_ue=$'\e[0m'
-EOF
+EOF_PRESETS
+}
+
+run_wizard() {
+  local mode
+  declare -A colors
+
+  need_command fzf || exit 1
+  need_command tput || exit 1
+
+  mode="$(detect_color_mode)"
+
+  print_detection "$mode"
+  echo
+  echo "=============================="
+  echo "LESS_TERMCAP RGB Color Picker"
+  echo "=============================="
+  echo "You will be prompted to select colors for man page text styles."
+  read -r -p "Press Enter to start."
+
+  colors[mb]="$(pick_color "LESS_TERMCAP_mb blinking")"
+  colors[md]="$(pick_color "LESS_TERMCAP_md bold")"
+  colors[us]="$(pick_color "LESS_TERMCAP_us underline")"
+  colors[so_fg]="$(pick_color "LESS_TERMCAP_so foreground")"
+  colors[so_bg]="$(pick_color "LESS_TERMCAP_so background")"
+
+  echo
+  echo "=============================="
+  echo "Your custom LESS_TERMCAP theme"
+  echo "=============================="
+  echo
+  echo "export LESS_TERMCAP_mb=\$'\e[1;38;2;${colors[mb]}m'"
+  echo "export LESS_TERMCAP_md=\$'\e[1;38;2;${colors[md]}m'"
+  echo "export LESS_TERMCAP_us=\$'\e[1;38;2;${colors[us]}m'"
+  echo "export LESS_TERMCAP_so=\$'\e[1;48;2;${colors[so_bg]};38;2;${colors[so_fg]}m'"
+  echo "export LESS_TERMCAP_me=\$'\e[0m'"
+  echo "export LESS_TERMCAP_se=\$'\e[0m'"
+  echo "export LESS_TERMCAP_ue=\$'\e[0m'"
+  echo
+  echo "Paste the block above into ~/.bashrc and run: source ~/.bashrc"
+}
+
+case "${1:-}" in
+  -h|--help)
+    show_help
+    ;;
+  -v|--version)
+    show_version
+    ;;
+  --preset|--presets)
+    print_presets
+    ;;
+  "")
+    run_wizard
+    ;;
+  *)
+    echo "Unknown option: $1" >&2
+    echo "Run './termcap_auto_wizard.sh --help' for usage." >&2
+    exit 2
+    ;;
+esac

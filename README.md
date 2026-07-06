@@ -1,86 +1,87 @@
 # Termcap Auto Wizard
 
-### 🧾 Script Description
+**Termcap Auto Wizard** is a Bash-based terminal color wizard for customizing `man` page styling through the `LESS_TERMCAP_*` environment variables.
 
-**`termcap_auto_wizard.sh`** is a guided terminal-based color picker for customizing `man` page styles using the `LESS_TERMCAP_*` environment variables.
+It detects your terminal color capability and helps generate a copy-paste-ready export block for your shell configuration.
 
----
+## What it does
 
-## What It Does
-
-- Detects your terminal’s color capability (8-color, 16-color, 256-color, 24-bit RGB)
-- Lets you interactively select colors for:
-  - Blinking text
-  - Bold text
-  - Underline
-  - Section headers (standout mode)
-- Generates a `~/.bashrc`-ready export block
-- Includes optimized presets for readability per terminal type
-
----
-
-## Use Cases
-
-- Improve readability of `man` pages
-- Match color scheme to your terminal
-- Learn ANSI/256-color/RGB terminal color logic
-
----
+- Detects terminal color support: 8-color, 16-color, 256-color, or 24-bit true color
+- Lets you interactively choose colors with `fzf`
+- Generates `LESS_TERMCAP_*` export lines for `~/.bashrc`
+- Includes readable presets for common terminal color modes
+- Helps make `man` pages easier to read
 
 ## Requirements
 
-- Bash
-- [`fzf`](https://github.com/junegunn/fzf) (Install with `sudo dnf install fzf`)
-- Terminal emulator (e.g., GNOME Terminal, Alacritty, xterm, TTY)
-- `tput` (part of ncurses)
+- Bash 4+
+- `fzf`
+- `tput`, usually provided by `ncurses`
+- A terminal emulator such as GNOME Terminal, Alacritty, xterm, or a TTY
 
----
+On RHEL-compatible systems:
 
-## How to Use
+```bash
+sudo dnf install fzf ncurses
+```
+
+## Usage
 
 ```bash
 chmod +x termcap_auto_wizard.sh
 ./termcap_auto_wizard.sh
 ```
 
-You’ll be guided step-by-step to choose colors and get your theme configuration.
-
----
-
-## Help
-
-You can also run:
+Show help:
 
 ```bash
 ./termcap_auto_wizard.sh --help
 ```
 
-To display built-in instructions.
+Show version:
 
----
+```bash
+./termcap_auto_wizard.sh --version
+```
 
-## 🛠️ Project Standards
+Print suggested presets without running the wizard:
 
-This repo includes tools to ensure **consistent behavior across platforms** and editors:
+```bash
+./termcap_auto_wizard.sh --preset
+```
 
-### `.editorconfig`
-- Enforces:
-  - UTF-8 encoding
-  - Unix-style line endings (`LF`)
-  - Final newline at end of file
-  - 2-space indentation for `.sh` files
-  - Markdown-friendly line break behavior
+## Applying the generated theme
 
-Most modern editors (VS Code, Sublime, JetBrains, Vim w/ plugin) respect this automatically.
+After the wizard prints your custom export block, paste it into `~/.bashrc`:
 
-### `.gitattributes`
-- Standardizes line endings across systems
-- Ensures proper Git diff behavior for:
-  - Shell scripts
-  - Markdown files
-  - Text and binary files
-- Helps prevent issues when collaborating across macOS, Windows, and Linux
+```bash
+nano ~/.bashrc
+```
 
----
+Then reload your shell configuration:
 
-Created with readability and terminal mastery in mind. 
+```bash
+source ~/.bashrc
+```
+
+Open a man page to test it:
+
+```bash
+man ls
+```
+
+## Project files
+
+- `termcap_auto_wizard.sh` — main wizard script
+- `LICENSE` — MIT license
+- `.editorconfig` — editor formatting rules
+- `.gitattributes` — Git line-ending and diff rules
+- `Miscellaneous Scripts/` — extra CLI helper scripts
+
+## Notes
+
+The miscellaneous CLI scripts are useful experiments, but the main portfolio project is `termcap_auto_wizard.sh`.
+
+## License
+
+MIT License. See `LICENSE`.
